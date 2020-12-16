@@ -3,6 +3,14 @@ import fs from 'fs';
 import { maxBy } from 'lodash';
 import { listenerCount } from 'process';
 
+/*
+  Tutto quello che c'è di seguito è, seppur interessante, inutile, in quanto
+  l'unico modo per risolverlo non richiede il loop ma una costruzione 
+  matematica.
+  Lascio queste basi di ricerca perché mi hanno fatto intuire la periodicità
+  dei bus, l'utilizzo dell'mcm per trovare il periodo.  
+*/
+
 let input = fs.readFileSync(__dirname + '/input2.txt', 'utf-8');
 let tests = parseTests(
   fs.readFileSync(__dirname + '/input2.test.txt', 'utf-8')
@@ -44,6 +52,16 @@ function parseTests(raw: string) {
     .map((row) => row.split(':') as [string, string])
     .map(([list, expected]) => ({ list, expected }));
 }
+
+const invmod = (n: number, mod: number) => {
+  while (n % mod !== n) n = n % mod;
+  for (let i = 1; i <= mod; i++) {
+    if ((i * n) % mod === 1) return i;
+  }
+  throw new Error('notfoundinv');
+};
+
+console.log(`Inv. modulus (91, 59)`, invmod(91, 59));
 
 const _ns = (n: number) => n.toString().padStart(5);
 const _ne = (n: number) => n.toString().padEnd(5);
@@ -123,31 +141,48 @@ function solve(data: string) {
 
   const mult = lcm(...periods.map((p) => p.z_period));
   const p_mult = lcm(...periods.map((p) => p.z_period - p.z_steps));
+  const c_mult = lcm(...periods.map((p) => p.steps));
   const t_0 = mult * zero.line - p_mult * zero.line;
 
-  console.log(`mult=${mult}, p_mult=${p_mult}, t_0=${t_0}`);
+  console.log(`mult=${mult.toLocaleString()}, c_mult=${c_mult}, p_mult=${p_mult}, t_0=${t_0.toLocaleString()}`); // prettier-ignore
 
-  // let n = 0;
-  // let match = false;
-  // while (n < 100_000_000_000) {
-  //   n++;
-  //   match = true;
-  //   for (const period of periods) {
-  //     if ((zero.line * n + period.constraint.offset) % period.z_period !== 0) {
-  //       match = false;
-  //       break;
-  //     }
+  // let xs = [3, 4, 5];
+  // let os = [3, 1];
+  // let [x0, ...xn] = xs;
+  // let _p = (n: number | string) => n.toString().padStart(3, ' ').padEnd(6, ' ');
+  // let _pe = (n: number | string) => n.toString().padEnd(4, ' ');
+  // for (let i = 0; i < 100; i++) {
+  //   if (i % x0 === 0 && xn.every((x, j) => (i + os[j]) % x === 0)) {
+  //     console.log(_pe('->') + xs.map((x) => _p('-----')).join(' '));
   //   }
-  //   if (match)
-  //     return {
-  //       n,
-  //       t: n * zero.line
-  //     };
-
-  //   if (n % 1_000_000_000 === 0) {
-  //     console.log(`1 billion and counting..`);
-  //   }
+  //   console.log(
+  //     _pe(i) + xs.map((x) => (i % x === 0 ? _p(x) : _p('.'))).join(' ')
+  //   );
   // }
+
+  let n = 9_000_000_000;
+  let match = false;
+  while (n < 100_000_000_000) {
+    n++;
+    match = true;
+    const t_max = (n * max.period + max.steps) * max.constraint.line;
+    const t = t_max - max.constraint.offset;
+    for (const period of periods) {
+      if ((t + period.constraint.offset) % period.z_period !== 0) {
+        match = false;
+        break;
+      }
+    }
+    if (match)
+      return {
+        t: t,
+        n
+      };
+
+    if (n % 1_000_000_000 === 0) {
+      console.log(`1 billion and counting.. (t_max=${t_max}, n=${n}, max.period=${max.period}, max.steps=${max.steps}, max.line=${max.constraint.line}, off=${max.constraint.offset}) `); // prettier-ignore
+    }
+  }
 
   // let n = 0;
   // while (true) {
@@ -168,12 +203,15 @@ function solve(data: string) {
    */
 }
 
-// tests.forEach((test, i) => {
-//   const result = solve(test.list)!;
-//   const expected = parseInt(test.expected, 10);
-//   if (result.t !== expected) {
-//     console.log(`Test #${i}: Result ${result.t} vs exp.${expected} (FAILURE)`);
-//   }
-// });
+tests.forEach((test, i) => {
+  const result = solve(test.list)!;
+  const expected = parseInt(test.expected, 10);
 
-console.log(`Bus timestamp is:`, solve(tests[0].list));
+  console.log(
+    `Test #${i}: Result ${result.t} vs exp.${expected} (${
+      result.t === expected ? 'ok' : 'FAILURE'
+    })\n\n`
+  );
+});
+
+console.log(`Bus timestamp is:`, solve(input));
