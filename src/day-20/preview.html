@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Rotation sample</title>
+  </head>
+  <body>
+    <style>
+      body {
+        font-family: Monaco;
+        font-size: 12px;
+      }
+      td {
+        border: 1px solid black;
+        padding: 7px;
+      }
+    </style>
+    <div id="root"></div>
+    <div id="root2"></div>
+    <script>
+      let root = document.getElementById('root');
+      
+      let matrix = (items) => {
+        return '<table>' + items.map((item, i) => [
+            `<tr>`,
+            item.map((cell, j) => `<td>${cell}</td>`).join('\n'), 
+            '</tr>'
+          ].join('\n')
+        ).join('\n') + '</table>'
+      }
+
+      let transform_ij = (
+        cells,
+        i,
+        j,
+        al
+      ) => {
+        const [rot, flip] = al;
+        switch (rot) {
+          case 90:
+            return { i: cells.length - 1 - j, j:  i };
+          case 180:
+            return { i: cells.length - 1 - i, j:  cells.length - 1 - j };
+          case 270:
+            return { i: j, j:  cells.length - 1 - i };
+        }
+      };
+
+      const DEG = 270;
+
+      let transform = (cells) => {
+        let next = [];
+        for (let i = 0; i < cells.length; i++) {
+          next[i] = [];
+          for (let j = 0; j < cells.length; j++) {
+            let { i: ni, j: nj } = transform_ij(cells, i, j, [DEG, 0]);
+            next[i][j] = cells[ni][nj];
+          }
+        }
+        return next;
+      }
+
+
+      let m = Array.from(Array(3).fill(null).map((_, i) => Array(3).fill(null).map((_, j) => `${i},${j}`)));
+      console.log(matrix(m));
+      root.innerHTML = matrix(m);
+
+      let table = document.getElementsByTagName('table')[0];
+      table.style.transform = `rotate(${DEG}deg)`;
+      for (const td of table.getElementsByTagName('td')) {
+        td.style.transform = `rotate(-${DEG}deg)`;
+      }
+
+      let rotated = document.createElement('div');
+      root.appendChild(rotated);
+      rotated.innerHTML = matrix(transform(m));
+    </script>
+  </body>
+</html>
