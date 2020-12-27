@@ -1,4 +1,5 @@
 use day_24::part1;
+use day_24::part2;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -10,6 +11,9 @@ fn main() {
 
     let black_count = part1::run(path.to_str().unwrap());
     println!("Blacks count is: {}", black_count);
+
+    let black_count = part2::run(path.to_str().unwrap(), 100);
+    println!("Blacks count exhibit is: {}", black_count);
 
     println!(
         "Elapsed: {:.3}ms",

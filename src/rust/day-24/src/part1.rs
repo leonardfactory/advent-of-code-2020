@@ -31,13 +31,13 @@ pub fn instruction_coords(instructions: &[Instruction]) -> HexCoord {
         .fold((0, 0), |(x, y), (dx, dy)| (x + dx, y + dy))
 }
 
-fn change_tile(map: &mut HexMap, instructions: &[Instruction]) {
+pub fn change_tile(map: &mut HexMap, instructions: &[Instruction]) {
     let (x, y) = instruction_coords(instructions);
     let tile = map.entry((x, y)).or_insert(Tile::White);
     *tile = tile.switch();
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub enum Tile {
     Black,
     White,
@@ -52,11 +52,11 @@ impl Tile {
     }
 }
 
-type HexCoord = (i32, i32);
-type HexMap = HashMap<HexCoord, Tile>;
+pub type HexCoord = (i32, i32);
+pub type HexMap = HashMap<HexCoord, Tile>;
 
 // parse instructions
-fn parse(content: &str) -> Vec<Vec<Instruction>> {
+pub fn parse(content: &str) -> Vec<Vec<Instruction>> {
     content.lines().map(parse_instruction).collect()
 }
 
